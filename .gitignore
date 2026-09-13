@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+# editor/assistant local config
+.windsurf/
+.claude/settings.local.json
+
+# agent skill docs - reinstallable from skills-lock.json
+.agents/
+.claude/skills/
+.windsurf/
+
+# generated Prisma client - rebuilt by 'prisma generate'
+lib/generated/
