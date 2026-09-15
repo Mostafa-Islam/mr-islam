@@ -79,7 +79,7 @@ model Group {
   createdAt DateTime @default(now())
 
   enrollments Enrollment[]
-
+  
   @@index([archived])
 }
 
@@ -101,8 +101,23 @@ model Enrollment {
   @@index([groupId])
 }
 
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
 
+  // The audience. Every student whose grade matches sees this lesson,
+  // regardless of which group they're in.
+  grade       Grade
 
+  published   Boolean  @default(false)
+  position    Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([grade, published, position])
+}
 
 
 
