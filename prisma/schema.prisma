@@ -44,6 +44,7 @@ model User {
   // dashboard load. Without an index Postgres scans every row; with it,
   // it jumps straight to the pending ones.
   @@index([status])
+  enrollments Enrollment[]
 }
 
 enum Grade {
@@ -69,3 +70,40 @@ enum Role {
   STUDENT
   TEACHER
 }
+model Group {
+  id        String   @id @default(cuid())
+  name      String            // "Year 11 — Sat 5pm"
+  grade     Grade             // curriculum level for this class
+  schedule  String?           // "Sat 5:00 PM & Tue 7:00 PM" — display only
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  enrollments Enrollment[]
+
+  @@index([archived])
+}
+
+// Join table. A student is in many groups and a group holds many students,
+// so neither table can store the other's id — the pair needs its own row.
+model Enrollment {
+  id       String   @id @default(cuid())
+  joinedAt DateTime @default(now())
+
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Postgres refuses a duplicate pair, so a double-clicked "approve"
+  // can't enroll the same student twice.
+  @@unique([studentId, groupId])
+  @@index([groupId])
+}
+
+
+
+
+
+
+
