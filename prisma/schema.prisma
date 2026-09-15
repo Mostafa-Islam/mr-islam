@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -12,13 +7,62 @@ datasource db {
   provider = "postgresql"
 }
 model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique
-  name      String
-  password  String
-  role      Role     @default(STUDENT)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+
+  // Login identifier. @unique means Postgres itself refuses a duplicate —
+  // two people submitting the signup form at the same instant can't both
+  // get through, which an application-level check can't guarantee.
+  phone       String   @unique
+
+  // Nullable (the ?) because many students won't have email, and a required
+  // field they can't fill is a wall at your signup form.
+  // Postgres allows unlimited NULLs in a unique column, so "no email" is
+  // never a duplicate of "no email".
+  email       String?  @unique
+
+  // Not a login. Used for the progress calls your mockup mentions.
+  parentPhone String?
+
+  // What the student picks at signup. This is NOT their group — Mr Islam
+  // assigns the actual class (Year 11 Sat 5pm vs Mon 5pm) at approval time.
+  // Grade is a hint for him, not an enrolment.
+  grade       Grade?
+
+  role        Role     @default(STUDENT)
+
+  // The gate. Everyone signs up PENDING and sees nothing until approved.
+  status      Status   @default(PENDING)
+
+  // bcrypt hash, never plaintext.
+  password    String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Speeds up the teacher's "who's waiting?" query, which runs on every
+  // dashboard load. Without an index Postgres scans every row; with it,
+  // it jumps straight to the pending ones.
+  @@index([status])
+}
+
+enum Grade {
+  // Egyptian national system — إعدادي
+  MIDDLE_1
+  MIDDLE_2
+  MIDDLE_3
+
+  // IGCSE
+  IG_9
+  IG_10
+  IG_11
+  IG_12
+}
+
+enum Status {
+  PENDING    // signed up, waiting for Mr Islam
+  ACTIVE     // approved, can see lessons
+  SUSPENDED  // stopped attending; kept so marks aren't lost
 }
 
 enum Role {
